@@ -5,12 +5,17 @@ import Notfound from "./components/uiComponents/notFound";
 import LoginPage from "./authentication/login/login";
 import RegisterPage from "./authentication/register/register";
 import FullWidthLayout from "./layouts/fullWidthLayout/fullWidthLayout";
+import CompaniesDetails from "./views/companyDetails/companyDetails";
+import EmployeeDetails from "./views/employeeDetails/employeeDetails";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
+        <Route index path="/Home" element={<Home />} />
+        <Route index path="/company-details" element={<CompaniesDetails />} />
+        <Route index path="/employee-details" element={<EmployeeDetails />} />
+
         <Route path="*" element={<Notfound />} />
       </Route>
       <Route path="/login" element={<FullWidthLayout />}>

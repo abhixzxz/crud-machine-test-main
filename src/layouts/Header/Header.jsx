@@ -52,18 +52,18 @@ const Header = () => {
         </Button>
         <Button color="inherit">
           <Link
-            to="/about"
+            to="/company-details"
             style={{ textDecoration: "none", color: "inherit" }}
           >
-            About
+            Companies
           </Link>
         </Button>
         <Button color="inherit">
           <Link
-            to="/contact"
+            to="/employee-details"
             style={{ textDecoration: "none", color: "inherit" }}
           >
-            Contact
+            Employees
           </Link>
         </Button>
       </Toolbar>

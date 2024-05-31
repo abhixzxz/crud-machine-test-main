@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import {
   Box,
@@ -9,13 +9,25 @@ import {
   Grid,
   Paper,
   Avatar,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
 import validationSchema from "./validationSchema";
+import axios from "axios";
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -23,7 +35,26 @@ const LoginPage = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async (values, actions) => {
-      console.log(values);
+      try {
+        const response = await axios.post("/api/auth/login", values);
+        console.log("Response data:", response);
+        if (response.status === 200) {
+          setSnackbarSeverity("success");
+          setSnackbarMessage("Login successful");
+          setSnackbarOpen(true);
+          navigate("/Home");
+        }
+        actions.resetForm();
+      } catch (error) {
+        console.error("Error occurred:", error);
+        if (error.response) {
+          console.log("Response data:", error.response.data);
+          console.log("Status code:", error.response.status);
+          setSnackbarSeverity("error");
+          setSnackbarMessage(error.response.data.message);
+          setSnackbarOpen(true);
+        }
+      }
     },
   });
 
@@ -119,6 +150,20 @@ const LoginPage = () => {
           </Grid>
         </Paper>
       </form>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
