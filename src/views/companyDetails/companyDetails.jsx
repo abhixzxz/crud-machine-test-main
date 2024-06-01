@@ -22,8 +22,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AddIcon from "@mui/icons-material/Add";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import ReadModal from "./readModal/readModal";
+import { validationSchema } from "./validationSchema";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 
 const CompaniesDetails = () => {
   const [companies, setCompanies] = useState([]);
@@ -44,7 +45,7 @@ const CompaniesDetails = () => {
         console.error("Error fetching company data:", error);
       });
   }, []);
-  console.log("companies:=>", companies);
+  // console.log("companies:=>", companies);
 
   const handleRead = (company) => {
     setSelectedCompany(company);
@@ -76,16 +77,11 @@ const CompaniesDetails = () => {
   };
 
   const handleCreateNew = () => {
+    formik.resetForm();
     setCurrentCompany(null);
     setIsEditing(false);
     setOpenModal(true);
   };
-
-  const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
-    email: Yup.string().email("Invalid email").required("Email is required"),
-    website: Yup.string().url("Invalid URL").required("Website is required"),
-  });
 
   const formik = useFormik({
     initialValues: {
@@ -93,7 +89,7 @@ const CompaniesDetails = () => {
       email: "",
       website: "",
     },
-    validationSchema,
+    validationSchema: validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
         const formData = new FormData();
@@ -222,7 +218,14 @@ const CompaniesDetails = () => {
               >
                 <Tooltip title="Add New Company">
                   <IconButton color="primary" onClick={handleCreateNew}>
-                    <AddIcon />
+                    <h6
+                      style={{
+                        marginRight: "5px",
+                      }}
+                    >
+                      CREATE
+                    </h6>
+                    <AddCircleIcon />
                   </IconButton>
                 </Tooltip>
               </TableCell>
@@ -311,7 +314,16 @@ const CompaniesDetails = () => {
             p: 4,
           }}
         >
-          <h2>{isEditing ? "Edit Company" : "Create New Company"}</h2>
+          <h2
+            style={{
+              fontFamily: "monospace",
+              fontWeight: "bold",
+              fontSize: "24px",
+              textAlign: "center",
+            }}
+          >
+            {isEditing ? "Edit Company" : "Create New Company"}
+          </h2>
           <form onSubmit={formik.handleSubmit}>
             <TextField
               fullWidth

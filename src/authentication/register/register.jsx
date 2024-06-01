@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import {
-  Box,
   Button,
   Container,
   TextField,
@@ -14,7 +13,6 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { Link, useNavigate } from "react-router-dom";
-import * as Yup from "yup";
 import validationSchema from "./validationSchems";
 import axios from "axios";
 
@@ -37,7 +35,7 @@ const RegisterPage = () => {
     },
     validationSchema: validationSchema,
     onSubmit: async (values, actions) => {
-      console.log(values);
+      // console.log(values);
       try {
         const response = await axios.post("/api/auth/register", values);
         console.log("Response data:", response);
@@ -54,8 +52,8 @@ const RegisterPage = () => {
           setSnackbarSeverity("error");
           setSnackbarMessage(error.response.data.message);
           setSnackbarOpen(true);
-          console.log("Response data:", error.response.data);
-          console.log("Status code:", error.response.status);
+          // console.log("Response data:", error.response.data);
+          // console.log("Status code:", error.response.status);
         }
       }
     },

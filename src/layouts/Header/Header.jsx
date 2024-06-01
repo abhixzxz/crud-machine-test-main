@@ -1,38 +1,23 @@
-// src/components/Header.js
 import React from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import MenuIcon from "@mui/icons-material/Menu";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
 
 const Header = () => {
-  const employees = [
-    {
-      name: "John Doe",
-      address: "123 Main St, City, Country",
-      email: "john@example.com",
-      age: 30,
-    },
-    {
-      name: "Jane Smith",
-      address: "456 Elm St, Town, Country",
-      email: "jane@example.com",
-      age: 25,
-    },
-  ];
+  const { authUser, logout } = useAuth();
 
   return (
     <AppBar
       position="static"
-      style={{ flexGrow: 1, marginBottom: "10px", borderRadius: "10px" }}
+      sx={{ flexGrow: 1, marginBottom: 2, borderRadius: 1 }}
     >
-      <Toolbar>
+      <Toolbar style={{}}>
         <Typography
           variant="h6"
-          style={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+          sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
         >
           <Link
             to="/"
@@ -45,27 +30,77 @@ const Header = () => {
             Admin
           </Link>
         </Typography>
-        <Button color="inherit">
-          <Link to="/" style={{ textDecoration: "none", color: "inherit" }}>
-            Home
-          </Link>
-        </Button>
-        <Button color="inherit">
-          <Link
-            to="/company-details"
-            style={{ textDecoration: "none", color: "inherit" }}
+        <div
+          className=""
+          style={{
+            display: "flex",
+            gap: "10px",
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <div
+            className=""
+            style={{
+              display: "flex",
+              gap: "10px",
+              paddingRight: "30px",
+            }}
           >
-            Companies
-          </Link>
-        </Button>
-        <Button color="inherit">
-          <Link
-            to="/employee-details"
-            style={{ textDecoration: "none", color: "inherit" }}
+            <Button color="inherit">
+              <Link
+                to="/company-details"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                Companies
+              </Link>
+            </Button>
+            <Button color="inherit">
+              <Link
+                to="/employee-details"
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
+                Employees
+              </Link>
+            </Button>
+          </div>
+          <div
+            className=""
+            style={{
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+            }}
           >
-            Employees
-          </Link>
-        </Button>
+            {authUser ? (
+              <>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    marginRight: 1,
+                    color: "white",
+                    fontWeight: "bold",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  user: {authUser.firstName}
+                </Typography>
+                <Button variant="contained" color="error" onClick={logout}>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button color="inherit">
+                <Link
+                  to="/login"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  Login
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
       </Toolbar>
     </AppBar>
   );

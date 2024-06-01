@@ -1,9 +1,9 @@
 import React from "react";
 import { Modal, Box, Typography, Button } from "@mui/material";
 
-const ReadModal = ({ isOpen, onClose, company }) => {
+const ReadModal = ({ isOpen, onClose, employee }) => {
   // Add a null check here
-  if (!company) return null;
+  if (!employee) return null;
 
   return (
     <Modal open={isOpen} onClose={onClose}>
@@ -22,29 +22,14 @@ const ReadModal = ({ isOpen, onClose, company }) => {
         }}
       >
         <Typography variant="h6" gutterBottom>
-          Company Details
+          Employee Details
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
-          Name: {company.name}
+          First Name: {employee.firstName}
         </Typography>
         <Typography variant="subtitle1" gutterBottom>
-          Email: {company.email}
+          Last Name: {employee.lastName}
         </Typography>
-        <Typography variant="subtitle1" gutterBottom>
-          Website: {company.website}
-        </Typography>
-        <img
-          style={{
-            height: 150,
-            width: 150,
-            borderRadius: "50%",
-            margin: "auto",
-            display: "block",
-            marginBottom: 20,
-          }}
-          src={company.logo}
-          alt="Company Logo"
-        />
         <Button onClick={onClose} variant="contained" color="primary">
           Close
         </Button>

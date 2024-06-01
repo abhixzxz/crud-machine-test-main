@@ -27,6 +27,8 @@ import AddIcon from "@mui/icons-material/Add";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import ReadModal from "./readModal/readModal";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { useAuth } from "../../context/authContext";
 
 const EmployeeDetails = () => {
   const [employees, setEmployees] = useState([]);
@@ -36,7 +38,8 @@ const EmployeeDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [readModalOpen, setReadModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
+  const { authUser } = useAuth();
+  console.log("Authenticated User:", authUser);
   useEffect(() => {
     axios
       .get("/api/employees/getAllEmployees")
@@ -47,7 +50,7 @@ const EmployeeDetails = () => {
         console.error("Error fetching employee data:", error);
       });
   }, []);
-  console.log("employees:=>", employees);
+  // console.log("employees:=>", employees);
 
   useEffect(() => {
     axios
@@ -59,11 +62,15 @@ const EmployeeDetails = () => {
         console.error("Error fetching company data:", error);
       });
   }, []);
-  console.log("companies:=>", companies);
+  // console.log("companies:=>", companies);
 
   const handleRead = (employee) => {
     setSelectedEmployee(employee);
     setReadModalOpen(true);
+  };
+
+  const handleCloseReadModal = () => {
+    setReadModalOpen(false);
   };
 
   const handleEdit = (index) => {
@@ -113,10 +120,10 @@ const EmployeeDetails = () => {
     },
     validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
+      console.log("values:", values);
       try {
         let response;
         if (isEditing) {
-          // Update existing employee
           const employeeId = currentEmployee.id;
           response = await axios.put(
             `/api/employees/updateEmployee/${employeeId}`,
@@ -124,7 +131,6 @@ const EmployeeDetails = () => {
           );
           console.log("Employee updated:", response.data);
         } else {
-          // Create new employee
           response = await axios.post("/api/employees/addEmployee", values);
           console.log("Employee created:", response.data);
         }
@@ -226,9 +232,16 @@ const EmployeeDetails = () => {
                   textAlign: "center",
                 }}
               >
-                <Tooltip title="Add New Employee">
+                <Tooltip title="Add New Company">
                   <IconButton color="primary" onClick={handleCreateNew}>
-                    <AddIcon />
+                    <h6
+                      style={{
+                        marginRight: "5px",
+                      }}
+                    >
+                      CREATE
+                    </h6>
+                    <AddCircleIcon />
                   </IconButton>
                 </Tooltip>
               </TableCell>
@@ -284,7 +297,7 @@ const EmployeeDetails = () => {
           </TableBody>
           <ReadModal
             isOpen={readModalOpen}
-            onClose={() => setReadModalOpen(false)}
+            onClose={handleCloseReadModal}
             employee={selectedEmployee}
           />
         </Table>
@@ -304,13 +317,22 @@ const EmployeeDetails = () => {
             p: 4,
           }}
         >
-          <h2>{isEditing ? "Edit Employee" : "Create New Employee"}</h2>
+          <h2
+            style={{
+              fontFamily: "monospace",
+              fontWeight: "bold",
+              fontSize: "24px",
+              textAlign: "center",
+            }}
+          >
+            {isEditing ? "Edit Employee" : "Create New Employee"}
+          </h2>
           <form onSubmit={formik.handleSubmit}>
             <TextField
               fullWidth
               margin="normal"
               label="Firstname"
-              name="firstname"
+              name="firstName"
               value={formik.values.firstName}
               onChange={formik.handleChange}
               error={
@@ -342,7 +364,7 @@ const EmployeeDetails = () => {
                 error={formik.touched.company && Boolean(formik.errors.company)}
               >
                 {companies.map((company) => (
-                  <MenuItem key={company.id} value={company.name}>
+                  <MenuItem key={company.id} value={company.id}>
                     {company.name}
                   </MenuItem>
                 ))}

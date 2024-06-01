@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useFormik } from "formik";
 import {
-  Box,
   Button,
   Container,
   TextField,
@@ -14,15 +13,16 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { Link, useNavigate } from "react-router-dom";
-import * as Yup from "yup";
 import validationSchema from "./validationSchema";
 import axios from "axios";
+import { useAuth } from "../../context/authContext";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const { login } = useAuth();
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -36,20 +36,20 @@ const LoginPage = () => {
     validationSchema: validationSchema,
     onSubmit: async (values, actions) => {
       try {
-        const response = await axios.post("/api/auth/login", values);
-        console.log("Response data:", response);
+        const response = await axios.post("/api/auth/login", values, {
+          withCredentials: true,
+        });
         if (response.status === 200) {
           setSnackbarSeverity("success");
           setSnackbarMessage("Login successful");
           setSnackbarOpen(true);
-          navigate("/Home");
+          login(response.data);
+          navigate("/company-details");
         }
         actions.resetForm();
       } catch (error) {
         console.error("Error occurred:", error);
         if (error.response) {
-          console.log("Response data:", error.response.data);
-          console.log("Status code:", error.response.status);
           setSnackbarSeverity("error");
           setSnackbarMessage(error.response.data.message);
           setSnackbarOpen(true);

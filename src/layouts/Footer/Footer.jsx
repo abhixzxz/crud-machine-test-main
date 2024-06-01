@@ -1,20 +1,21 @@
-import { Typography, Container } from "@mui/material";
+import React from "react";
+import { Box, Typography } from "@mui/material";
 
 const Footer = () => {
   return (
-    <footer
-      style={{
-        marginTop: "auto",
-        backgroundColor: "#f5f5f5",
-        padding: "20px 0",
+    <Box
+      sx={{
+        bgcolor: "primary.main",
+        color: "white",
+        p: 2,
+        mt: "auto",
+        textAlign: "center",
       }}
     >
-      <Container>
-        <Typography variant="body1" align="center">
-          © 2024 My Website. All rights reserved.
-        </Typography>
-      </Container>
-    </footer>
+      <Typography variant="body1">
+        &copy; {new Date().getFullYear()} Abhiraj: All rights reserved.
+      </Typography>
+    </Box>
   );
 };
 
