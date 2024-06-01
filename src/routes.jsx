@@ -12,7 +12,6 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index path="/Home" element={<Home />} />
         <Route index path="/company-details" element={<CompaniesDetails />} />
         <Route index path="/employee-details" element={<EmployeeDetails />} />
 

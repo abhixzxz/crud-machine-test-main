@@ -42,7 +42,7 @@ const Header = () => {
               textTransform: "uppercase",
             }}
           >
-            Employee Management
+            Admin
           </Link>
         </Typography>
         <Button color="inherit">

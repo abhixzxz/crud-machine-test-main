@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   Table,
   TableBody,
@@ -10,181 +11,356 @@ import {
   Avatar,
   Link,
   Button,
+  Modal,
+  Box,
+  TextField,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-
-const dummyCompanies = [
-  {
-    name: "Company A",
-    email: "companyA@example.com",
-    logo: "https://via.placeholder.com/100x100",
-    website: "https://www.companyA.com",
-  },
-  {
-    name: "Company B",
-    email: "companyB@example.com",
-    logo: "https://via.placeholder.com/100x100",
-    website: "https://www.companyB.com",
-  },
-  {
-    name: "Company C",
-    email: "companyC@example.com",
-    logo: "https://letsenhance.io/static/8f5e523ee6b2479e26ecc91b9c25261e/1015f/MainAfter.jpg",
-    website: "https://www.companyC.com",
-  },
-  {
-    name: "Company B",
-    email: "companyB@example.com",
-    logo: "https://via.placeholder.com/100x100",
-    website: "https://www.companyB.com",
-  },
-  {
-    name: "Company C",
-    email: "companyC@example.com",
-    logo: "https://via.placeholder.com/100x100",
-    website: "https://www.companyC.com",
-  },
-];
+import AddIcon from "@mui/icons-material/Add";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import ReadModal from "./readModal/readModal";
 
 const CompaniesDetails = () => {
-  const handleRead = (index) => {
-    // Add your read logic here
-    console.log("Read company details at index:", index);
+  const [companies, setCompanies] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
+  const [currentCompany, setCurrentCompany] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [logoFile, setLogoFile] = useState(null);
+  const [readModalOpen, setReadModalOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState(null);
+
+  useEffect(() => {
+    axios
+      .get("/api/companies/getAllCompany")
+      .then((response) => {
+        setCompanies(response.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching company data:", error);
+      });
+  }, []);
+  console.log("companies:=>", companies);
+
+  const handleRead = (company) => {
+    setSelectedCompany(company);
+    setReadModalOpen(true);
   };
 
   const handleEdit = (index) => {
-    // Add your edit logic here
-    console.log("Edit company at index:", index);
+    setCurrentCompany({ ...companies[index], index });
+    setIsEditing(true);
+    setOpenModal(true);
   };
 
-  const handleDelete = (index) => {
-    // Add your delete logic here
-    console.log("Delete company at index:", index);
+  const handleDelete = async (index) => {
+    const companyId = companies[index].id;
+    try {
+      await axios.delete(`/api/companies/deleteCompany/${companyId}`);
+      const updatedCompanies = companies.filter((_, i) => i !== index);
+      setCompanies(updatedCompanies);
+      console.log("Deleted company at index:", index);
+    } catch (error) {
+      console.error("Error deleting company:", error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setCurrentCompany(null);
+    setLogoFile(null);
+  };
+
+  const handleCreateNew = () => {
+    setCurrentCompany(null);
+    setIsEditing(false);
+    setOpenModal(true);
+  };
+
+  const validationSchema = Yup.object({
+    name: Yup.string().required("Name is required"),
+    email: Yup.string().email("Invalid email").required("Email is required"),
+    website: Yup.string().url("Invalid URL").required("Website is required"),
+  });
+
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      website: "",
+    },
+    validationSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        const formData = new FormData();
+        formData.append("name", values.name);
+        formData.append("email", values.email);
+        formData.append("website", values.website);
+        formData.append("logo", logoFile);
+
+        let response;
+        if (isEditing) {
+          // Update existing company
+          const companyId = currentCompany.id;
+          response = await axios.put(
+            `/api/companies/updateCompany/${companyId}`,
+            formData,
+            {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            }
+          );
+          console.log("Company updated:", response.data);
+        } else {
+          // Create new company
+          response = await axios.post("/api/companies/addCompany", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          console.log("Company created:", response.data);
+        }
+        const updatedCompanies = await axios.get(
+          "/api/companies/getAllCompany"
+        );
+        setCompanies(updatedCompanies.data);
+      } catch (error) {
+        console.error("Error:", error);
+      } finally {
+        setSubmitting(false);
+        handleCloseModal();
+      }
+    },
+    enableReinitialize: true,
+  });
+
+  useEffect(() => {
+    if (currentCompany) {
+      formik.setValues({
+        name: currentCompany.name,
+        email: currentCompany.email,
+        website: currentCompany.website,
+      });
+      setLogoFile(null);
+    }
+  }, [currentCompany]);
+
+  const handleLogoFileChange = (event) => {
+    setLogoFile(event.currentTarget.files[0]);
+  };
+
+  const getLogoUrl = (logoPath) => {
+    return `http://localhost:5001/${logoPath}`;
   };
 
   return (
-    <TableContainer
-      component={Paper}
-      style={{
-        width: "100%",
-        marginTop: "30px",
-      }}
-    >
-      <Table
+    <>
+      <TableContainer
+        component={Paper}
         style={{
           width: "100%",
+          marginTop: "30px",
         }}
       >
-        <TableHead>
-          <TableRow>
-            <TableCell
-              style={{
-                fontWeight: "bold",
-                textTransform: "uppercase",
-              }}
-            >
-              Name
-            </TableCell>
-            <TableCell
-              style={{
-                fontWeight: "bold",
-                textTransform: "uppercase",
-              }}
-            >
-              Email
-            </TableCell>
-            <TableCell
-              style={{
-                fontWeight: "bold",
-                textTransform: "uppercase",
-              }}
-            >
-              Logo
-            </TableCell>
-            <TableCell
-              style={{
-                fontWeight: "bold",
-                textTransform: "uppercase",
-              }}
-            >
-              Website
-            </TableCell>
-            <TableCell
-              style={{
-                fontWeight: "bold",
-                textTransform: "uppercase",
-                textAlign: "center",
-              }}
-            >
-              Actions
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {dummyCompanies.map((company, index) => (
-            <TableRow key={index}>
-              <TableCell>{company.name}</TableCell>
-              <TableCell>{company.email}</TableCell>
-              <TableCell>
-                {company.logo && (
-                  <Avatar
-                    alt={company.name}
-                    src={company.logo}
-                    sx={{ width: 100, height: 100 }}
-                  />
-                )}
+        <Table
+          style={{
+            width: "100%",
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell
+                style={{
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                Name
               </TableCell>
-              <TableCell>
-                {company.website && (
-                  <Link href={company.website} target="_blank" rel="noopener">
-                    {company.website}
-                  </Link>
-                )}
+              <TableCell
+                style={{
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                Email
               </TableCell>
-              <TableCell>
-                <Button
-                  style={{
-                    marginRight: "10px",
-                    color: "green",
-                  }}
-                  startIcon={<VisibilityIcon />}
-                  onClick={() => handleRead(index)}
-                >
-                  Read
-                </Button>
-                <Button
-                  style={{
-                    marginRight: "10px",
-                  }}
-                  startIcon={<EditIcon />}
-                  onClick={() => handleEdit(index)}
-                >
-                  Edit
-                </Button>
-                <Button
-                  style={{
-                    marginRight: "10px",
-                    color: "red",
-                  }}
-                  startIcon={
-                    <DeleteIcon
-                      style={{
-                        color: "red",
-                      }}
-                    />
-                  }
-                  onClick={() => handleDelete(index)}
-                >
-                  Delete
-                </Button>
+              <TableCell
+                style={{
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                Logo
+              </TableCell>
+              <TableCell
+                style={{
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                Website
+              </TableCell>
+              <TableCell
+                style={{
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                  textAlign: "center",
+                }}
+              >
+                Actions
+              </TableCell>
+              <TableCell
+                style={{
+                  textAlign: "center",
+                }}
+              >
+                <Tooltip title="Add New Company">
+                  <IconButton color="primary" onClick={handleCreateNew}>
+                    <AddIcon />
+                  </IconButton>
+                </Tooltip>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {companies.map((company, index) => (
+              <TableRow key={index}>
+                <TableCell>{company.name}</TableCell>
+                <TableCell>{company.email}</TableCell>
+                <TableCell>
+                  {company.logo && (
+                    <Avatar
+                      alt={company.name}
+                      src={company?.logo}
+                      sx={{ width: 100, height: 100 }}
+                    />
+                  )}
+                </TableCell>
+                <TableCell>
+                  {company.website && (
+                    <Link href={company.website} target="_blank" rel="noopener">
+                      {company.website}
+                    </Link>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    style={{
+                      marginRight: "10px",
+                      color: "green",
+                    }}
+                    startIcon={<VisibilityIcon />}
+                    onClick={() => handleRead(company)}
+                  >
+                    Read
+                  </Button>
+                  <Button
+                    style={{
+                      marginRight: "10px",
+                    }}
+                    startIcon={<EditIcon />}
+                    onClick={() => handleEdit(index)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    style={{
+                      marginRight: "10px",
+                      color: "red",
+                    }}
+                    startIcon={
+                      <DeleteIcon
+                        style={{
+                          color: "red",
+                        }}
+                      />
+                    }
+                    onClick={() => handleDelete(index)}
+                  >
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <ReadModal
+            isOpen={readModalOpen}
+            onClose={() => setReadModalOpen(false)}
+            company={selectedCompany}
+          />
+        </Table>
+      </TableContainer>
+
+      <Modal open={openModal} onClose={handleCloseModal}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            border: "2px solid #000",
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <h2>{isEditing ? "Edit Company" : "Create New Company"}</h2>
+          <form onSubmit={formik.handleSubmit}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Name"
+              name="name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Email"
+              name="email"
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              error={formik.touched.email && Boolean(formik.errors.email)}
+              helperText={formik.touched.email && formik.errors.email}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoFileChange}
+              style={{ marginTop: "20px" }}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Website"
+              name="website"
+              value={formik.values.website}
+              onChange={formik.handleChange}
+              error={formik.touched.website && Boolean(formik.errors.website)}
+              helperText={formik.touched.website && formik.errors.website}
+            />
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              style={{ marginTop: "20px" }}
+            >
+              {isEditing ? "Save" : "Create"}
+            </Button>
+          </form>
+        </Box>
+      </Modal>
+    </>
   );
 };
 
